@@ -1,5 +1,5 @@
-// controllers/userController.js
-const db = require('../config/db');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -7,13 +7,21 @@ const userController = {
     getProfile: async (req, res) => {
         try {
             const userId = req.user.user_id;
-            const query = 'SELECT id, email, name, created_at, updated_at FROM users WHERE id = ?';
-            const [rows] = await db.query(query, [userId]);
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
+            });
 
-            if (rows.length === 0) {
+            if (!user) {
                 return res.status(404).json({ message: 'User not found.' });
             }
-            res.json(rows[0]);
+            res.json(user);
         } catch (err) {
             console.error('Unexpected error in getProfile:', err);
             res.status(500).json({ message: 'Server error on get profile.' });
@@ -24,30 +32,32 @@ const userController = {
         try {
             const { email, password, name } = req.body;
 
-            const checkQuery = 'SELECT id FROM users WHERE email = ?';
-            const [existingUsers] = await db.query(checkQuery, [email]);
+            const existingUser = await prisma.user.findUnique({
+                where: { email },
+            });
 
-            if (existingUsers.length > 0) {
+            if (existingUser) {
                 return res.status(400).json({ message: 'User already exists.' });
             }
 
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            const insertQuery = `
-        INSERT INTO users (email, password, name, created_at, updated_at)
-        VALUES (?, ?, ?, NOW(), NOW())
-      `;
-            const [insertResult] = await db.query(insertQuery, [email, hashedPassword, name]);
+            const newUser = await prisma.user.create({
+                data: {
+                    email,
+                    password: hashedPassword,
+                    name,
+                },
+                select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
+            });
 
-            const userId = insertResult.insertId;
-            const selectQuery = 'SELECT id, email, name, created_at, updated_at FROM users WHERE id = ?';
-            const [rows] = await db.query(selectQuery, [userId]);
-
-            if (rows.length === 0) {
-                return res.status(404).json({ message: 'User not found after creation.' });
-            }
-
-            res.status(201).json({ message: 'User created successfully', user: rows[0] });
+            res.status(201).json({ message: 'User created successfully', user: newUser });
         } catch (err) {
             console.error('Unexpected error in signup:', err);
             res.status(500).json({ message: 'Server error on signup.' });
@@ -57,31 +67,34 @@ const userController = {
     login: async (req, res) => {
         try {
             const { email, password } = req.body;
-            const selectQuery = 'SELECT * FROM users WHERE email = ?';
-            const [users] = await db.query(selectQuery, [email]);
+            const user = await prisma.user.findUnique({
+                where: { email },
+            });
+            console.log("🚀 ~ login: ~ password:", password)
+            console.log("🚀 ~ login: ~ email:", email)
 
-            if (users.length === 0) {
+            if (!user) {
                 return res.status(401).json({ message: 'Invalid credentials.' });
             }
 
-            const user = users[0];
             const isMatch = await bcrypt.compare(password, user.password);
+            console.log("🚀 ~ login: ~ isMatch:", isMatch)
             if (!isMatch) {
                 return res.status(401).json({ message: 'Invalid credentials.' });
             }
 
             const token = jwt.sign({ user_id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-            const { id, email: userEmail, name, created_at, updated_at } = user;
+            const { id, email: userEmail, name, createdAt, updatedAt } = user;
             res.json({
                 token,
-                user: { id, email: userEmail, name, created_at, updated_at }
+                user: { id, email: userEmail, name, createdAt, updatedAt },
             });
         } catch (err) {
             console.error('Unexpected error in login:', err);
             res.status(500).json({ message: 'Server error on login.' });
         }
-    }
+    },
 };
 
 module.exports = userController;
