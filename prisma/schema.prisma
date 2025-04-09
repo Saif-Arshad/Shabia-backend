@@ -16,6 +16,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   Services Services[]
+  News     News[]
 }
 
 model Services {
@@ -28,5 +29,16 @@ model Services {
   contactPhone String
   image        String
   createdBy    Int
-  user         User     @relation(fields: [createdBy], references: [id])
+  user         User   @relation(fields: [createdBy], references: [id])
+}
+
+model News {
+  id          Int      @id @default(autoincrement())
+  title       String
+  category    String
+  description String
+  image       String
+  createdBy   Int
+  user        User     @relation(fields: [createdBy], references: [id])
+  createdAt   DateTime @default(now())
 }

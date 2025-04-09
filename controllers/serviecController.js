@@ -68,7 +68,9 @@ const servicesController = {
     getAllServices: async (req, res) => {
         try {
             const services = await prisma.services.findMany({
-
+                include: {
+                    user: true
+                }
             });
 
             res.status(200).json({ services });
