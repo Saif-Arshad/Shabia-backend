@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const userRoutes = require('./routes/userRoutes');
 const serviceRoutes = require('./routes/ServiceROutes');
 const newsRoutes = require('./routes/newsRoutes');
+const eventsRoutes = require('./routes/eventsRoutes');
 
 const app = express();
 app.use(cors());
@@ -20,6 +21,7 @@ app.get('/', (req, res) => {
 app.use('/user', userRoutes);
 app.use('/service', serviceRoutes );
 app.use('/news', newsRoutes);
+app.use('/events', eventsRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
