@@ -21,6 +21,7 @@ model User {
   Event       Event[]
   Participant Participant[]
   Job         Job[]
+  Messages    Messages[]
 }
 
 model Services {
@@ -83,4 +84,12 @@ model Job {
   salary      String
   user        User     @relation(fields: [createdBy], references: [id])
   createdAt   DateTime @default(now())
+}
+
+model Messages {
+  id        Int      @id @default(autoincrement())
+  createdBy Int
+  message   String
+  user      User     @relation(fields: [createdBy], references: [id])
+  createdAt DateTime @default(now())
 }

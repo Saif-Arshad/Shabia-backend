@@ -27,6 +27,21 @@ const userController = {
             res.status(500).json({ message: 'Server error on get profile.' });
         }
     },
+    getMessages: async (req, res) => {
+        try {
+            const messages = await prisma.messages.findMany({
+                include: {
+                    user: true
+                },
+            });
+
+          
+            res.json(messages);
+        } catch (err) {
+            console.error('Unexpected error in getProfile:', err);
+            res.status(500).json({ message: 'Server error on get profile.' });
+        }
+    },
 
     signup: async (req, res) => {
         try {
