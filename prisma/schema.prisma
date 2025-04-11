@@ -20,6 +20,7 @@ model User {
 
   Event       Event[]
   Participant Participant[]
+  Job         Job[]
 }
 
 model Services {
@@ -63,9 +64,23 @@ model Event {
 }
 
 model Participant {
-  id      Int    @id @default(autoincrement())
+  id      Int   @id @default(autoincrement())
   userId  Int
-  user    User   @relation(fields: [userId], references: [id])
+  user    User  @relation(fields: [userId], references: [id])
   eventId Int
-  event   Event  @relation(fields: [eventId], references: [id])
+  event   Event @relation(fields: [eventId], references: [id])
+}
+
+model Job {
+  id          Int      @id @default(autoincrement())
+  title       String
+  company     String
+  location    String
+  description String
+  createdBy   Int
+  category    String
+  type        String
+  salary      String
+  user        User     @relation(fields: [createdBy], references: [id])
+  createdAt   DateTime @default(now())
 }

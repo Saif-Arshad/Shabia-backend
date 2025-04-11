@@ -8,6 +8,7 @@ const userRoutes = require('./routes/userRoutes');
 const serviceRoutes = require('./routes/ServiceROutes');
 const newsRoutes = require('./routes/newsRoutes');
 const eventsRoutes = require('./routes/eventsRoutes');
+const jobRoutes = require('./routes/jobRoutes');
 
 const app = express();
 app.use(cors());
@@ -22,6 +23,7 @@ app.use('/user', userRoutes);
 app.use('/service', serviceRoutes );
 app.use('/news', newsRoutes);
 app.use('/events', eventsRoutes);
+app.use('/jobs', jobRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
