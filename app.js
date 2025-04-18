@@ -10,6 +10,7 @@ const prisma = new PrismaClient();
 
 const userRoutes = require('./routes/userRoutes');
 const postRoutes = require('./routes/postRoutes');
+const groupsRouter = require('./routes/group.routes');
 
 const app = express();
 app.use(cors());
@@ -34,6 +35,7 @@ io.on("connection", (socket) => {
                 data: {
                     createdBy: data.createdBy,
                     message: data.message,
+                    groupId: Number(data.groupId)
                 },
                 include: {
                     user: true,
@@ -58,7 +60,7 @@ app.get('/', (req, res) => {
 
 app.use('/user', userRoutes);
 app.use('/posts', postRoutes);
-
+app.use('/groups', groupsRouter);
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

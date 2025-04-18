@@ -22,19 +22,21 @@ enum Type {
 }
 
 model User {
-  id          Int           @id @default(autoincrement())
-  email       String        @unique
-  password    String
-  name        String?
-  createdAt   DateTime      @default(now())
-  latestOtp   String?
-  location    String?
-  isVerified  Boolean       @default(false)
-  updatedAt   DateTime      @updatedAt
-  Role        Role          @default(USER)
-  Participant Participant[]
-  Messages    Messages[]
-  Posts       Posts[]
+  id               Int                @id @default(autoincrement())
+  email            String             @unique
+  password         String
+  name             String?
+  createdAt        DateTime           @default(now())
+  latestOtp        String?
+  location         String?
+  isVerified       Boolean            @default(false)
+  updatedAt        DateTime           @updatedAt
+  Role             Role               @default(USER)
+  Participant      Participant[]
+  Messages         Messages[]
+  Posts            Posts[]
+  GroupParticipant GroupParticipant[]
+  Groups           Groups[]
 }
 
 model Posts {
@@ -63,15 +65,36 @@ model Participant {
   id      Int    @id @default(autoincrement())
   userId  Int
   user    User   @relation(fields: [userId], references: [id])
-  postId  Int
   Posts   Posts? @relation(fields: [postsId], references: [id])
   postsId Int?
+}
+
+model Groups {
+  id        Int    @id @default(autoincrement())
+  name      String
+  location1 String
+  location2 String
+  adminId   Int
+  admin     User   @relation(fields: [adminId], references: [id])
+  createdAt        DateTime           @default(now())
+  Messages         Messages[]
+  GroupParticipant GroupParticipant[]
+}
+
+model GroupParticipant {
+  id      Int     @id @default(autoincrement())
+  userId  Int
+  user    User    @relation(fields: [userId], references: [id])
+  Group   Groups? @relation(fields: [groupId], references: [id])
+  groupId Int?
 }
 
 model Messages {
   id        Int      @id @default(autoincrement())
   createdBy Int
   message   String
+  groupId   Int
+  group     Groups   @relation(fields: [groupId], references: [id])
   user      User     @relation(fields: [createdBy], references: [id])
   createdAt DateTime @default(now())
 }

@@ -189,6 +189,51 @@ const userController = {
             console.error("Error verifying OTP:", error);
             return res.status(500).json({ success: false, message: error.message });
         }
+    },
+    getAllUsers: async (req, res) => {
+        try {
+            const users = await prisma.user.findMany({
+                select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                    Role: true,
+                    location: true,
+                    isVerified: true,
+                    createdAt: true,
+                }
+            });
+            console.log("🚀 ~ getAllUsers: ~ users:", users)
+            res.json(users);
+        } catch (err) {
+            console.error('Unexpected error in getAllUsers:', err);
+            res.status(500).json({ message: 'Server error while fetching users.' });
+        }
+    },
+
+    deleteUser: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const userId = parseInt(id);
+
+            const user = await prisma.user.findUnique({
+                where: { id: userId }
+            });
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found.' });
+            }
+
+            // Delete user
+            await prisma.user.delete({
+                where: { id: userId }
+            });
+
+            res.json({ message: 'User deleted successfully' });
+        } catch (err) {
+            console.error('Unexpected error in deleteUser:', err);
+            res.status(500).json({ message: 'Server error while deleting user.' });
+        }
     }
 
 };

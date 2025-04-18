@@ -4,6 +4,8 @@ const userController = require('../controllers/userController');
 const verifyToken = require('../middleware/verifyToken');
 
 router.get('/profile', verifyToken, userController.getProfile);
+router.get('/all', userController.getAllUsers);
+router.delete('/:id', userController.deleteUser);
 router.get('/messages', userController.getMessages);
 router.post('/signup', userController.signup);
 router.post('/verify', userController.verifyOTP);
