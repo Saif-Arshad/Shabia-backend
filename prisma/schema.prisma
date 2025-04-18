@@ -7,83 +7,65 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+  BUSINESS
+}
+
+enum Type {
+  SERVICE
+  NEWS
+  EVENT
+  JOB
+}
+
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  Services Services[]
-  News     News[]
-
-  Event       Event[]
+  id          Int           @id @default(autoincrement())
+  email       String        @unique
+  password    String
+  name        String?
+  createdAt   DateTime      @default(now())
+  latestOtp   String?
+  location    String?
+  isVerified  Boolean       @default(false)
+  updatedAt   DateTime      @updatedAt
+  Role        Role          @default(USER)
   Participant Participant[]
-  Job         Job[]
   Messages    Messages[]
+  Posts       Posts[]
 }
 
-model Services {
-  id           Int    @id @default(autoincrement())
-  title        String
-  category     String
-  description  String
-  location     String
-  contactEmail String
-  contactPhone String
-  image        String
-  createdBy    Int
-  user         User   @relation(fields: [createdBy], references: [id])
-}
-
-model News {
-  id          Int      @id @default(autoincrement())
-  title       String
-  category    String
-  description String
-  image       String
-  createdBy   Int
-  user        User     @relation(fields: [createdBy], references: [id])
-  createdAt   DateTime @default(now())
-}
-
-model Event {
+model Posts {
   id           Int           @id @default(autoincrement())
+  type         Type          @default(SERVICE)
   title        String
   category     String
   description  String
+  location1    String
+  location2    String
   image        String
-  createdBy    Int
-  eventDate    String
-  startTime    String
-  endTime      String
-  location     String
+  eventDate    String?
+  startTime    String?
+  endTime      String?
   participants Participant[]
+  jobType      String?
+  contactEmail String?
+  contactPhone String?
+  company      String?
+  salary       String?
+  createdBy    Int
   user         User          @relation(fields: [createdBy], references: [id])
-  createdAt    DateTime      @default(now())
 }
 
 model Participant {
-  id      Int   @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   userId  Int
-  user    User  @relation(fields: [userId], references: [id])
-  eventId Int
-  event   Event @relation(fields: [eventId], references: [id])
-}
-
-model Job {
-  id          Int      @id @default(autoincrement())
-  title       String
-  company     String
-  location    String
-  description String
-  createdBy   Int
-  category    String
-  type        String
-  salary      String
-  user        User     @relation(fields: [createdBy], references: [id])
-  createdAt   DateTime @default(now())
+  user    User   @relation(fields: [userId], references: [id])
+  postId  Int
+  Posts   Posts? @relation(fields: [postsId], references: [id])
+  postsId Int?
 }
 
 model Messages {

@@ -2,6 +2,34 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer')
+
+function generateOTP(length = 6) {
+    let otp = '';
+    for (let i = 0; i < length; i++) {
+        otp += Math.floor(Math.random() * 10);
+    }
+    return otp;
+}
+async function sendOTPEmail(email, otp, subject = "Email Verification OTP") {
+    const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
+
+    const mailOptions = {
+        from: `"Shabia" <${process.env.MAIL_USER}>`,
+        to: email,
+        subject,
+        html: `<p>Your OTP is: <strong>${otp}</strong></p>
+           <p>Please use this OTP to verify your email address.</p>`,
+    };
+
+    await transporter.sendMail(mailOptions);
+}
 
 const userController = {
     getProfile: async (req, res) => {
@@ -35,7 +63,7 @@ const userController = {
                 },
             });
 
-          
+
             res.json(messages);
         } catch (err) {
             console.error('Unexpected error in getProfile:', err);
@@ -45,7 +73,7 @@ const userController = {
 
     signup: async (req, res) => {
         try {
-            const { email, password, name } = req.body;
+            const { email, password, name, location, userType } = req.body;
 
             const existingUser = await prisma.user.findUnique({
                 where: { email },
@@ -57,20 +85,31 @@ const userController = {
 
             const hashedPassword = await bcrypt.hash(password, 10);
 
+
+            const otp = generateOTP(6);
+            console.log("🚀 ~ signup: ~ otp:", otp)
+            await sendOTPEmail(email, otp, "Email Verification OTP");
+
             const newUser = await prisma.user.create({
                 data: {
                     email,
+                    latestOtp: otp,
+                    Role: userType,
                     password: hashedPassword,
                     name,
+                    location
+
                 },
                 select: {
                     id: true,
                     email: true,
                     name: true,
+                    Role: true,
                     createdAt: true,
                     updatedAt: true,
                 },
             });
+
 
             res.status(201).json({ message: 'User created successfully', user: newUser });
         } catch (err) {
@@ -91,6 +130,9 @@ const userController = {
             if (!user) {
                 return res.status(401).json({ message: 'Invalid credentials.' });
             }
+            if (!user.isVerified) {
+                return res.status(401).json({ message: 'Please Verify your profile ' });
+            }
 
             const isMatch = await bcrypt.compare(password, user.password);
             console.log("🚀 ~ login: ~ isMatch:", isMatch)
@@ -103,13 +145,52 @@ const userController = {
             const { id, email: userEmail, name, createdAt, updatedAt } = user;
             res.json({
                 token,
-                user: { id, email: userEmail, name, createdAt, updatedAt },
+                user: { id, email: userEmail, name, createdAt, updatedAt, role: user.Role },
             });
         } catch (err) {
             console.error('Unexpected error in login:', err);
             res.status(500).json({ message: 'Server error on login.' });
         }
     },
+    verifyOTP: async (req, res) => {
+        try {
+            const { email, otp } = req.body;
+            if (!email || !otp) {
+                return res.status(400).json({ success: false, message: "Email and OTP are required." });
+            }
+
+            const user = await prisma.user.findUnique({
+                where: { email },
+            });
+
+            if (!user) {
+                return res.status(404).json({ success: false, message: "User not found." });
+            }
+            if (user.isVerified) {
+                return res.status(400).json({ success: false, message: "User already verified." });
+            }
+            if (user.latestOtp !== otp) {
+                return res.status(400).json({ success: false, message: "Incorrect OTP." });
+            }
+
+            const updatedUser = await prisma.user.update({
+                where: { email },
+                data: { isVerified: true, latestOtp: null },
+            });
+
+            const { password: _, ...userWithoutPassword } = updatedUser;
+
+            return res.status(200).json({
+                success: true,
+                data: userWithoutPassword,
+                message: "Email verified successfully.",
+            });
+        } catch (error) {
+            console.error("Error verifying OTP:", error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
 };
 
 module.exports = userController;

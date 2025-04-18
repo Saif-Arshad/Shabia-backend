@@ -1,18 +1,15 @@
 require('dotenv').config();
 const express = require('express');
-const http = require('http'); // Added: required to create an HTTP server
+const http = require('http');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const { Server } = require("socket.io");
-const { PrismaClient } = require("@prisma/client"); // Added: initializing Prisma
-const prisma = new PrismaClient(); // Initialize prisma
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 const userRoutes = require('./routes/userRoutes');
-const serviceRoutes = require('./routes/ServiceROutes');
-const newsRoutes = require('./routes/newsRoutes');
-const eventsRoutes = require('./routes/eventsRoutes');
-const jobRoutes = require('./routes/jobRoutes');
+const postRoutes = require('./routes/postRoutes');
 
 const app = express();
 app.use(cors());
@@ -60,10 +57,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/user', userRoutes);
-app.use('/service', serviceRoutes);
-app.use('/news', newsRoutes);
-app.use('/events', eventsRoutes);
-app.use('/jobs', jobRoutes);
+app.use('/posts', postRoutes);
 
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
