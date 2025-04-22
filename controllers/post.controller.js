@@ -144,7 +144,7 @@ const postsController = {
             console.log("🚀 ~ joinEvent: ~ userId:", userId)
 
             const existingParticipation = await prisma.participant.findFirst({
-                where: { postId, userId }
+                where: { postsId: Number(postId), userId: Number(userId) }
             });
 
             if (existingParticipation) {
@@ -152,19 +152,19 @@ const postsController = {
             }
 
             const event = await prisma.posts.findUnique({
-                where: { id: postId, type: 'EVENT' }
+                where: { id: Number(postId), type: 'EVENT' }
             });
 
             if (!event) {
                 return res.status(404).json({ message: 'Event not found.' });
             }
 
-            if (event.createdBy === userId) {
+            if (event.createdBy == userId) {
                 return res.status(400).json({ message: 'Cannot join your own event.' });
             }
 
             const participation = await prisma.participant.create({
-                data: { postId, userId }
+                data: { postsId: Number(postId), userId: Number(userId) }
             });
 
             res.status(201).json({ message: 'Joined event successfully', participation });
