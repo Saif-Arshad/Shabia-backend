@@ -8,6 +8,7 @@ router.get('/all', userController.getAllUsers);
 router.delete('/:id', userController.deleteUser);
 router.get('/messages', userController.getMessages);
 router.post('/signup', userController.signup);
+router.put('/update/:id', userController.updateUser);
 router.post('/verify', userController.verifyOTP);
 router.post('/login', userController.login);
 

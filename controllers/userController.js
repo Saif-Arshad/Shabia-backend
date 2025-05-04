@@ -243,6 +243,11 @@ const userController = {
                     userId: userId
                 }
             })
+            await prisma.groups.deleteMany({
+                where: {
+                    adminId: userId
+                }
+            })
 
 
             // Delete user
@@ -255,7 +260,33 @@ const userController = {
             console.error('Unexpected error in deleteUser:', err);
             res.status(500).json({ message: 'Server error while deleting user.' });
         }
-    }
+    },
+    updateUser: async (req, res) => {
+        try {
+            const id = parseInt(req.params.id, 10);
+            const { name, location, email, Role } = req.body;
+            const existing = await prisma.user.findUnique({ where: { id } });
+            if (!existing) {
+                return res.status(404).json({ message: 'User not found.' });
+            }
+
+            const updated = await prisma.user.update({
+                where: { id },
+                data: {
+                    name: name ?? existing.name,
+                    location,
+                    email,
+                    Role
+
+                },
+            });
+
+            res.json(updated);
+        } catch (err) {
+            console.error('Error in updateUser:', err);
+            res.status(500).json({ message: 'Server error while updating User.' });
+        }
+    },
 
 };
 
