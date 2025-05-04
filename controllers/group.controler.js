@@ -110,18 +110,32 @@ const groupController = {
     deleteGroup: async (req, res) => {
         try {
             const id = parseInt(req.params.id, 10);
+
             const existing = await prisma.groups.findUnique({ where: { id } });
             if (!existing) {
                 return res.status(404).json({ message: 'Group not found.' });
             }
 
+            // 1) delete all messages in that group
+            await prisma.messages.deleteMany({
+                where: { groupId: id },
+            });
+
+            // 2) delete all group-participant links
+            await prisma.groupParticipant.deleteMany({
+                where: { groupId: id },
+            });
+
+            // 3) now you can delete the group itself
             await prisma.groups.delete({ where: { id } });
-            res.json({ message: 'Group deleted successfully.' });
+
+            return res.json({ message: 'Group deleted successfully.' });
         } catch (err) {
             console.error('Error in deleteGroup:', err);
-            res.status(500).json({ message: 'Server error while deleting group.' });
+            return res.status(500).json({ message: 'Server error while deleting group.' });
         }
     },
+
 };
 
 module.exports = groupController;
