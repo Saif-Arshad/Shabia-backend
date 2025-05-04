@@ -223,6 +223,27 @@ const userController = {
             if (!user) {
                 return res.status(404).json({ message: 'User not found.' });
             }
+            await prisma.participant.deleteMany({
+                where: {
+                    userId: userId
+                }
+            })
+            await prisma.posts.deleteMany({
+                where: {
+                    createdBy: userId
+                }
+            })
+            await prisma.messages.deleteMany({
+                where: {
+                    createdBy: userId
+                }
+            })
+            await prisma.groupParticipant.deleteMany({
+                where: {
+                    userId: userId
+                }
+            })
+
 
             // Delete user
             await prisma.user.delete({
